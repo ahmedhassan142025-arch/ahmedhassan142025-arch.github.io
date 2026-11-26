@@ -23,6 +23,8 @@ header:before,header:after{content:"";position:absolute;border-radius:50%;backgr
 .offers{display:flex;gap:10px;overflow:auto;padding:0 12px 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
 .of{flex:0 0 150px;scroll-snap-align:start;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px #0001;position:relative}
 .of img{width:100%;aspect-ratio:1;object-fit:cover;display:block}.of div{padding:8px 10px}.of b{font-size:12px;display:block;height:36px;overflow:hidden;line-height:1.5}.of .dz{display:block;margin-top:4px}
+.bgs{position:absolute;top:8px;inset-inline-start:8px;z-index:2;display:flex;flex-direction:column;gap:4px;align-items:flex-start}.bgs span{background:var(--p2);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:9px}.bgs span:nth-child(2){background:#2c0b36}
+.ph:not(.ld),.ph2:not(.ld){background:linear-gradient(90deg,#eee3ef 25%,#f8f1f9 50%,#eee3ef 75%);background-size:200% 100%;animation:sh 1.2s infinite}.ph img,.ph2 img{opacity:0;transition:opacity .35s}.ph.ld img,.ph2.ld img{opacity:1}.ph2{aspect-ratio:1}.ph2 img{width:100%;height:100%;object-fit:cover;display:block}.of{position:relative}
 .tag{position:absolute;top:8px;inset-inline-start:8px;background:var(--p2);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px}
 .tools{position:sticky;top:60px;z-index:20;background:linear-gradient(var(--bg) 85%,#f7f2f800);padding:10px 0 6px}
 .cats,.fl{display:flex;gap:8px;overflow:auto;padding:0 12px;scrollbar-width:none}.fl{margin-top:8px}
@@ -71,7 +73,7 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:18px 12px}
 <div class="sw"><div class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a7aa5" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="s" placeholder="ابحث عن منتج..." autocomplete="off"></div></div>
 <div class="hero"><div><h2>أسعار جملة لكل المحافظات</h2><p>مكياج، عناية بالجسم والبشرة، وعطور. اطلب من أول قطعة، وأسعار الدستة أوفر.</p><span class="pill">شحن لجميع المحافظات</span></div></div>
 <div class="perks"><span>منتجات أصلية</span><span>شحن لكل المحافظات</span><span>الطلب عبر واتساب</span><span>عروض الدستة</span></div>
-<div id="offw" style="display:none"><div class="sec"><h3>عروض الدستة</h3><small>سعر أوفر عند الجملة</small></div><div class="offers" id="off"></div></div>
+<div id="offw" style="display:none"><div class="sec"><h3>ترند على القناة</h3><small>الأكثر ترويجاً وعروض الدستة</small></div><div class="offers" id="off"></div></div>
 <div class="sec"><h3>كل المنتجات</h3><small id="cnt"></small></div>
 <div class="tools"><div class="cats" id="cats"></div><div class="fl" id="fl"></div></div>
 <div class="grid" id="g"></div>
@@ -81,24 +83,33 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:18px 12px}
 <script>
 const PHONE="201112462010",$=i=>document.getElementById(i);
 let P=[],cart=JSON.parse(localStorage.getItem("ac")||"{}"),fav=JSON.parse(localStorage.getItem("af")||"[]"),cat="الكل",q="",flt="all";
-const cats=["الكل","مكياج","عناية بالجسم","عناية بالبشرة","عطور وسبلاش"];
-const flts=[["all","الكل"],["fav","♥ المفضلة"],["lo","الأرخص"],["hi","الأغلى"],["u50","أقل من 50"],["u100","50 إلى 100"],["o100","أكثر من 100"],["dz","له سعر دستة"]];
+const cats=["الكل","عطور وسبلاش","مكياج","عناية بالبشرة","عناية بالجسم","عناية بالشعر"];
+const flts=[["all","الأفضل (ترند)"],["new","الأحدث"],["fav","♥ المفضلة"],["lo","الأرخص"],["hi","الأغلى"],["u50","أقل من 50"],["u100","50 إلى 100"],["o100","أكثر من 100"],["dz","له سعر دستة"]];
 const E=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const save=()=>{localStorage.setItem("ac",JSON.stringify(cart));localStorage.setItem("af",JSON.stringify(fav))};
 const by=id=>P.find(x=>x.id==id);
 function line(p,n){if(p.d&&n>=12)return Math.floor(n/12)*p.d+(n%12)*p.p;return n*p.p}
 function toast(t){const e=$("tt");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1500)}
+function bdg(p){const a=[];if(p.d)a.push("عرض الدستة");if(p.dt>=NEWD)a.push("جديد");if(p.promo>=3&&a.length<2)a.push("ترويج متكرر");return a.length?`<div class="bgs">${a.map(x=>`<span>${x}</span>`).join("")}</div>`:""}
+const NEWD="2026-11-25";
 function pr(p){return `<div class="pr">${p.p} ج<small>${E(p.l||"للقطعة")}</small></div>${p.d?`<span class="dz">الدستة ${p.d} ج</span>`:""}`}
+const TH={},GLR={},SHN={th:["2-th0.json","3-th1.json","4-th2.json","5-th3.json","6-th4.json"],gl:["7-gl0.json", "8-gl1.json", "9-gl2.json", "10-gl3.json", "11-gl4.json", "12-gl5.json", "13-gl6.json", "14-gl7.json", "15-gl8.json", "16-gl9.json", "17-gl10.json", "18-gl11.json", "19-gl12.json", "20-gl13.json", "21-gl14.json", "22-gl15.json", "23-gl16.json", "24-gl17.json", "25-gl18.json"]};
+function thumb(id){return TH[id]||""}
+function loadTh(){SHN.th.forEach(u=>fetch(u).then(x=>x.json()).then(d=>{Object.assign(TH,d);document.querySelectorAll("img[data-t]").forEach(im=>{const v=TH[im.dataset.t];if(v){im.src=v;im.removeAttribute("data-t");im.parentElement.classList.add("ld")}});if(cartOpen())cartv()}).catch(()=>{}))}
+function cartOpen(){return $("ov").dataset.v=="c"}
+function gal(id,cb){const i=P.findIndex(x=>x.id==id),u=SHN.gl[Math.floor(i/10)];if(GLR[id]||!u)return cb&&cb();fetch(u).then(x=>x.json()).then(d=>{Object.assign(GLR,d);cb&&cb()}).catch(()=>{})}
 function skel(){$("g").innerHTML=Array(6).fill('<div class="sk"><i class="a"></i><i class="b"></i><i class="c"></i></div>').join("")}
 function ctl(p){const n=cart[p.id]||0;return n?`<div class="step"><button onclick="c(${p.id},1)">+</button><b>${n}</b><button onclick="c(${p.id},-1)">−</button></div>`:`<button class="add" onclick="c(${p.id},1)">أضف للسلة</button>`}
+let LIM=36;
 function list(){let a=P.filter(p=>(cat=="الكل"||p.c==cat)&&p.n.includes(q));
  if(flt=="fav")a=a.filter(p=>fav.includes(p.id));if(flt=="u50")a=a.filter(p=>p.p<50);if(flt=="u100")a=a.filter(p=>p.p>=50&&p.p<=100);if(flt=="o100")a=a.filter(p=>p.p>100);if(flt=="dz")a=a.filter(p=>p.d);
- if(flt=="lo")a=[...a].sort((x,y)=>x.p-y.p);if(flt=="hi")a=[...a].sort((x,y)=>y.p-x.p);return a}
+ if(flt=="new")a=[...a].sort((x,y)=>(y.dt>x.dt?1:y.dt<x.dt?-1:y.s-x.s));if(flt=="lo")a=[...a].sort((x,y)=>x.p-y.p);if(flt=="hi")a=[...a].sort((x,y)=>y.p-x.p);return a}
 function r(anim){
  $("cats").innerHTML=cats.map(c=>`<button class="chip ${c==cat?"on":""}" onclick="cat='${c}';r(1)">${c}</button>`).join("");
  $("fl").innerHTML=flts.map(f=>`<button class="chip ${f[0]==flt?"on":""}" onclick="flt='${f[0]}';r(1)">${f[1]}</button>`).join("");
- const a=list();$("cnt").textContent=a.length+" منتج";
- $("g").innerHTML=a.length?a.map((p,i)=>`<div class="card" style="animation-delay:${anim?Math.min(i,8)*40:0}ms"><div class="ph" onclick="o('${p.id}')"><img loading="lazy" alt="" src="${p.i[0]}"><button class="fav ${fav.includes(p.id)?"on":""}" onclick="event.stopPropagation();f('${p.id}')">♥</button></div><div class="in"><div class="nm" onclick="o('${p.id}')">${E(p.n)}</div>${pr(p)}${ctl(p)}</div></div>`).join(""):`<div class="empty">مفيش منتجات مطابقة</div>`;
+ if(anim)LIM=36;const A=list(),a=A.slice(0,LIM);$("cnt").textContent=A.length+" منتج";
+ $("g").innerHTML=a.length?a.map((p,i)=>`<div class="card" style="animation-delay:${anim?Math.min(i,8)*40:0}ms"><div class="ph ${TH[p.id]?"ld":""}" onclick="o('${p.id}')">${bdg(p)}<img alt="" ${TH[p.id]?`src="${TH[p.id]}"`:`data-t="${p.id}"`}><button class="fav ${fav.includes(p.id)?"on":""}" onclick="event.stopPropagation();f('${p.id}')">♥</button></div><div class="in"><div class="nm" onclick="o('${p.id}')">${E(p.n)}</div>${pr(p)}${ctl(p)}</div></div>`).join(""):`<div class="empty">مفيش منتجات مطابقة</div>`;
+ if(A.length>LIM)$("g").insertAdjacentHTML("beforeend",`<div class="empty" style="padding:10px"><button class="chip on" onclick="LIM+=36;r()">عرض المزيد (${A.length-LIM})</button></div>`);
  bar()}
 function bar(){const ids=Object.keys(cart).filter(k=>cart[k]),n=ids.reduce((s,k)=>s+cart[k],0),t=ids.reduce((s,k)=>s+line(by(k),cart[k]),0);
  $("bd").textContent=n;$("bd").classList.toggle("on",n>0);$("bar").classList.toggle("on",n>0);$("bn").textContent=`عرض السلة (${n})`;$("bt").textContent=t+" ج";return[n,t,ids]}
@@ -107,12 +118,13 @@ function f(id){fav=fav.includes(id)?fav.filter(x=>x!=id):[...fav,id];save();r();
 function show(h,v){$("sh").innerHTML=h;$("ov").dataset.v=v;$("ov").classList.add("on")}
 function hide(){$("ov").classList.remove("on");$("ov").dataset.v=""}
 $("ov").onclick=e=>{if(e.target==$("ov"))hide()};
-function o(id,keep){const p=by(id);if(!p)return;const sc=keep&&$("gal")?$("gal").scrollLeft:0;
- show(`<div class="grab"></div><div class="gal" id="gal">${p.i.map(i=>`<img alt="" src="${i}">`).join("")}</div>${p.i.length>1?`<div class="dots" id="dots">${p.i.map((_,k)=>`<i class="${k?"":"on"}"></i>`).join("")}</div>`:""}<div class="bd"><h3>${E(p.n)}</h3>${pr(p)}<p>${E(p.t||"")}</p></div><div class="acts">${(cart[p.id]||0)?`<div class="step" style="flex:1;height:48px"><button onclick="c('${p.id}',1)">+</button><b>${cart[p.id]}</b><button onclick="c('${p.id}',-1)">−</button></div>`:`<button class="add" onclick="c('${p.id}',1)">أضف للسلة</button>`}<button class="fav ${fav.includes(p.id)?"on":""}" onclick="f('${p.id}')">♥</button></div>`,"p");
+function o(id,keep){const p=by(id);if(!p)return;if(!GLR[id]&&!keep){gal(id,()=>{if($("ov").dataset.v=="p"&&location.hash=="#p"+id)o(id,1)})}const sc=keep&&$("gal")?$("gal").scrollLeft:0;
+ show(`<div class="grab"></div><div class="gal" id="gal">${IM(p).map(i=>`<img alt="" src="${i}">`).join("")}</div>${IM(p).length>1?`<div class="dots" id="dots">${IM(p).map((_,k)=>`<i class="${k?"":"on"}"></i>`).join("")}</div>`:""}<div class="bd"><h3>${E(p.n)}</h3>${pr(p)}<p>${E(p.t||"")}</p></div><div class="acts">${(cart[p.id]||0)?`<div class="step" style="flex:1;height:48px"><button onclick="c('${p.id}',1)">+</button><b>${cart[p.id]}</b><button onclick="c('${p.id}',-1)">−</button></div>`:`<button class="add" onclick="c('${p.id}',1)">أضف للسلة</button>`}<button class="fav ${fav.includes(p.id)?"on":""}" onclick="f('${p.id}')">♥</button></div>`,"p");
  const gl=$("gal");if(sc)gl.scrollLeft=sc;gl.onscroll=()=>{const k=Math.round(Math.abs(gl.scrollLeft)/gl.clientWidth);document.querySelectorAll("#dots i").forEach((d,j)=>d.classList.toggle("on",j==k))};
  history.replaceState(null,"","#p"+id)}
+function IM(p){return GLR[p.id]||[TH[p.id]||""]}
 function cartv(){const[n,t,ids]=bar();if(!n){hide();return}
- show(`<div class="grab"></div><div class="ch"><h3>سلتك</h3><button class="x" onclick="hide()">✕</button></div>${ids.map(k=>{const p=by(k),n=cart[k];return `<div class="li"><img alt="" src="${p.i[0]}"><div class="t"><b>${E(p.n)}</b><small>${n} × ${p.p} ج${p.d&&n>=12?" (سعر الدستة مطبّق)":""} = ${line(p,n)} ج</small></div><div class="step"><button onclick="c('${k}',1)">+</button><b>${n}</b><button onclick="c('${k}',-1)">−</button></div></div>`}).join("")}<div class="sum"><div><span>عدد القطع</span><b>${n}</b></div><div><span>عدد الأصناف</span><b>${ids.length}</b></div><div class="tt"><span>الإجمالي التقريبي</span><span>${t} ج</span></div></div><div class="note">الإجمالي بدون الشحن، وبيتأكد من المحل على واتساب. سعر الدستة بيتطبق تلقائي لما الكمية تبقى 12 فأكتر في الصنف اللي له سعر دستة.</div><button class="wa" onclick="chk()">متابعة وإدخال بيانات العميل</button><button class="clr" onclick="if(confirm('تفضية السلة؟')){cart={};save();r();hide()}">تفضية السلة</button>`,"c")}
+ show(`<div class="grab"></div><div class="ch"><h3>سلتك</h3><button class="x" onclick="hide()">✕</button></div>${ids.map(k=>{const p=by(k),n=cart[k];return `<div class="li"><img alt="" src="${TH[p.id]||""}"><div class="t"><b>${E(p.n)}</b><small>${n} × ${p.p} ج${p.d&&n>=12?" (سعر الدستة مطبّق)":""} = ${line(p,n)} ج</small></div><div class="step"><button onclick="c('${k}',1)">+</button><b>${n}</b><button onclick="c('${k}',-1)">−</button></div></div>`}).join("")}<div class="sum"><div><span>عدد القطع</span><b>${n}</b></div><div><span>عدد الأصناف</span><b>${ids.length}</b></div><div class="tt"><span>الإجمالي التقريبي</span><span>${t} ج</span></div></div><div class="note">الإجمالي بدون الشحن، وبيتأكد من المحل على واتساب. سعر الدستة بيتطبق تلقائي لما الكمية تبقى 12 فأكتر في الصنف اللي له سعر دستة.</div><button class="wa" onclick="chk()">متابعة وإدخال بيانات العميل</button><button class="clr" onclick="if(confirm('تفضية السلة؟')){cart={};save();r();hide()}">تفضية السلة</button>`,"c")}
 const GOV=["القاهرة","الجيزة","الإسكندرية","الدقهلية","البحر الأحمر","البحيرة","الفيوم","الغربية","الإسماعيلية","المنوفية","المنيا","القليوبية","الوادي الجديد","السويس","أسوان","أسيوط","بني سويف","بورسعيد","دمياط","الشرقية","جنوب سيناء","كفر الشيخ","مطروح","الأقصر","قنا","شمال سيناء","سوهاج"];
 const AD=s=>String(s||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
 function normPh(v){let x=AD(v).replace(/[\s\-().]/g,"");if(x.startsWith("+20"))x="0"+x.slice(3);else if(x.startsWith("0020"))x="0"+x.slice(4);else if(/^20\d{10}$/.test(x))x="0"+x.slice(2);return x}
@@ -132,8 +144,8 @@ function snd(){const u=cu();location.href="https://wa.me/"+PHONE+"?text="+encode
 $("cb").onclick=$("open").onclick=cartv;
 $("s").oninput=e=>{q=e.target.value.trim();r()};
 skel();
-fetch("7-products.json").then(x=>x.json()).then(d=>{P=d.map(p=>({...p,id:String(p.id)}));cart=Object.fromEntries(Object.entries(cart).filter(([k])=>by(k)));fav=fav.filter(k=>by(k));
- const of=P.filter(p=>p.d).slice(0,12);if(of.length){$("offw").style.display="block";$("off").innerHTML=of.map(p=>`<div class="of" onclick="o('${p.id}')"><span class="tag">دستة</span><img loading="lazy" alt="" src="${p.i[0]}"><div><b>${E(p.n)}</b><div class="pr" style="font-size:15px">${p.p} ج<small>للقطعة</small></div><span class="dz">الدستة ${p.d} ج</span></div></div>`).join("")}
- r(1);if(location.hash.startsWith("#p"))o(location.hash.slice(2))});
+fetch("1-7-products.json").then(x=>x.json()).then(d=>{P=d.map(p=>({...p,id:String(p.id)}));cart=Object.fromEntries(Object.entries(cart).filter(([k])=>by(k)));fav=fav.filter(k=>by(k));
+ const cc={},tr=P.filter(p=>(cc[p.c]=(cc[p.c]||0)+1)<=4).slice(0,12);$("offw").style.display="block";$("off").innerHTML=tr.map(p=>`<div class="of" onclick="o('${p.id}')">${bdg(p)}<div class="ph2 ${TH[p.id]?"ld":""}"><img alt="" ${TH[p.id]?`src="${TH[p.id]}"`:`data-t="${p.id}"`}></div><div><b>${E(p.n)}</b><div class="pr" style="font-size:15px">${p.p} ج<small>${E(p.l||"للقطعة")}</small></div>${p.d?`<span class="dz">الدستة ${p.d} ج</span>`:""}</div></div>`).join("");
+ r(1);loadTh();if(location.hash.startsWith("#p"))o(location.hash.slice(2))});
 if("serviceWorker"in navigator)navigator.serviceWorker.register("3-sw.js");
 </script></body></html>
